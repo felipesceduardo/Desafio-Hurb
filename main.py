@@ -47,7 +47,7 @@ def texto_para_lista(elemento, delimitador=';'):
 def chave_coduf(elemento): 
     """
     Receber um dicionário 
-    Retornar uma tupla contendo todos os valores para cada chave
+    Retornar uma tupla contendo coduf e um dicionário
     """  
     coduf = elemento['coduf']
     return (coduf, elemento)
@@ -55,7 +55,7 @@ def chave_coduf(elemento):
 def casos_covid(elemento):
     """
     Recebe uma tupla (coduf, [{}, {}, {}...])
-    Retornar uma tupla contendo regiao, estado, coduf, totalCasos, totalObitos
+    Retornar uma tupla contendo o coduf e um dicionário contendo regiao, estado, coduf, totalCasos, totalObitos
     """
     coduf, registros = elemento
     totalCasos = 0
@@ -66,15 +66,43 @@ def casos_covid(elemento):
 
     for registro in registros:
         totalCasos += int(registro['casosNovos'])
-        totalObitos += int(registro['obitosNovos'])
-    return (regiao, estado, coduf, totalCasos, totalObitos)
+        totalObitos += int(registro['obitosNovos'])       
+    dicionario = {
+        'UF': estado,
+        'regiao': regiao,
+        'totalCasos': totalCasos,
+        'totalObitos': totalObitos
+    }
+    return (coduf, dicionario)
 
 def lista_para_tupla(elemento):
     """
     Receber lista 
-    Retornar tupla com colunas filtradas
+    Retornar tupla com coduf e um dicionário contendo nome do estado e do governador
     """
-    return (elemento[0], elemento[1], elemento[3])
+    nome_estado = elemento[0]
+    coduf = elemento[1]
+    governador = elemento[3]
+    dicionario = {
+        'nome_estado': nome_estado,
+        'governador': governador
+    }
+    return (coduf, dicionario)
+
+'''def organizando_dados_resultado(elemento):
+    """
+    """
+
+    coduf, lista_dicionarios = elemento 
+    dic1 = lista_dicionarios[0]
+    dic2 = lista_dicionarios[1]
+    regiao = dic2['regiao']
+    estado = dic1['nome_estado']
+    uf = dic2['UF']
+    governador = dic1['governador']
+    totalCasos = dic2['totalCasos']
+    totalObitos = dic2['totalObitos']
+    return (regiao, estado, uf, governador, totalCasos, totalObitos)'''
 
 #pcollection gerado a partir do pipeline que trata os dados do arquivo HIST_PAINEL_COVIDBR_28set2020.csv
 covid = (
@@ -86,7 +114,7 @@ covid = (
     | "Criar chave pelo código da UF" >> beam.Map(chave_coduf)
     | "Agrupar pelo estado" >> beam.GroupByKey()
     | "Descompactar casos de covid" >> beam.Map(casos_covid)
-    #| "Mostrar resultados" >> beam.Map(print)   
+   # | "Mostrar resultados" >> beam.Map(print)   
 )
 
 #pcollection gerado a partir do pipeline que trata os dados do arquivo EstadosIBGE.csv
@@ -96,15 +124,16 @@ estados = (
         ReadFromText('EstadosIBGE.csv', skip_header_lines=1)
     | "Transforma texto para lista" >> beam.Map(texto_para_lista)
     | "Lista para tupla" >> beam.Map(lista_para_tupla)
-    | "Exibe resultados" >> beam.Map(print)   
+   # | "Exibe resultados" >> beam.Map(print)   
 )
-'''
+
 resultado = (
     (covid, estados)
     | "Empilha as pcollection" >> beam.Flatten()
-    #| "Agrupa as pcollection" >> beam.GroupByKey()
+    | "Agrupa as pcollection" >> beam.GroupByKey()
+    #| "Tratando e organizando dados para saída final" >> beam.Map(organizando_dados_resultado) 
     | "Mostrar resultados da união dos pcollection" >> beam.Map(print)
-)'''
+)
 
 pipeline.run()
 

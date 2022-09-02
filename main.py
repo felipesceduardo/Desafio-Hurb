@@ -89,20 +89,23 @@ def lista_para_tupla(elemento):
     }
     return (coduf, dicionario)
 
-'''def organizando_dados_resultado(elemento):
+def organizando_dados_resultado(elemento):
     """
+    Receber tupla 
+    Organizar e retornar as colunas conforme solicitado no projeto
     """
-
-    coduf, lista_dicionarios = elemento 
-    dic1 = lista_dicionarios[0]
-    dic2 = lista_dicionarios[1]
-    regiao = dic2['regiao']
-    estado = dic1['nome_estado']
-    uf = dic2['UF']
-    governador = dic1['governador']
-    totalCasos = dic2['totalCasos']
-    totalObitos = dic2['totalObitos']
-    return (regiao, estado, uf, governador, totalCasos, totalObitos)'''
+    coduf, lista_dicionarios = elemento
+    if(coduf != '76'):       
+        dic1 = lista_dicionarios[0]
+        dic2 = lista_dicionarios[1]
+        regiao = dic2['regiao']
+        estado = dic1['nome_estado']
+        uf = dic2['UF']
+        governador = dic1['governador']
+        totalCasos = dic2['totalCasos']
+        totalObitos = dic2['totalObitos']
+        return (regiao, estado, uf, governador, totalCasos, totalObitos)
+    
 
 #pcollection gerado a partir do pipeline que trata os dados do arquivo HIST_PAINEL_COVIDBR_28set2020.csv
 covid = (
@@ -131,7 +134,7 @@ resultado = (
     (covid, estados)
     | "Empilha as pcollection" >> beam.Flatten()
     | "Agrupa as pcollection" >> beam.GroupByKey()
-    #| "Tratando e organizando dados para saída final" >> beam.Map(organizando_dados_resultado) 
+    | "Tratando e organizando dados para saída final" >> beam.Map(organizando_dados_resultado) 
     | "Mostrar resultados da união dos pcollection" >> beam.Map(print)
 )
 

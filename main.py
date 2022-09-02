@@ -86,7 +86,7 @@ covid = (
     | "Criar chave pelo código da UF" >> beam.Map(chave_coduf)
     | "Agrupar pelo estado" >> beam.GroupByKey()
     | "Descompactar casos de covid" >> beam.Map(casos_covid)
-    | "Mostrar resultados" >> beam.Map(print)   
+    #| "Mostrar resultados" >> beam.Map(print)   
 )
 
 #pcollection gerado a partir do pipeline que trata os dados do arquivo EstadosIBGE.csv
@@ -98,6 +98,13 @@ estados = (
     | "Lista para tupla" >> beam.Map(lista_para_tupla)
     | "Exibe resultados" >> beam.Map(print)   
 )
+'''
+resultado = (
+    (covid, estados)
+    | "Empilha as pcollection" >> beam.Flatten()
+    #| "Agrupa as pcollection" >> beam.GroupByKey()
+    | "Mostrar resultados da união dos pcollection" >> beam.Map(print)
+)'''
 
 pipeline.run()
 

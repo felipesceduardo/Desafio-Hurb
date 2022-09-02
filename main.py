@@ -1,5 +1,6 @@
 import apache_beam as beam
 from apache_beam.io import ReadFromText
+from apache_beam.io.textio import WriteToText
 #importando opções de pipeline para o projeto 
 from apache_beam.options.pipeline_options import PipelineOptions 
 #criação de instância de objeto de opção de pipeline 
@@ -99,7 +100,7 @@ def remove_regiao(elemento):
         return False  
     return True
 
-def organiza_dados_resultado(elemento):
+def organiza_dados(elemento):
     """
     Recebe uma tupla 
     Retorna uma tupla com colunas organizadas conforme solicitado no projeto
@@ -113,7 +114,15 @@ def organiza_dados_resultado(elemento):
     governador = dic1['governador']
     totalCasos = dic2['totalCasos']
     totalObitos = dic2['totalObitos']
-    return (regiao, estado, uf, governador, totalCasos, totalObitos)
+    return (regiao, estado, uf, governador, str(totalCasos), str(totalObitos))
+
+def preparar_csv(elemento, delimitador=";"):
+    """
+    Receber uma tupla do tipo 
+    Retornar uma string delimitada por ';'
+    """
+    return f"{delimitador}".join(elemento)    
+
     
 
 #pcollection gerado a partir do pipeline que trata os dados do arquivo HIST_PAINEL_COVIDBR_28set2020.csv
@@ -144,9 +153,14 @@ resultado = (
     | "Empilha as pcollection" >> beam.Flatten()
     | "Agrupa as pcollection" >> beam.GroupByKey()
     | "Remove região denominada Brasil" >> beam.Filter(remove_regiao) 
-    | "Organiza os dados" >> beam.Map(organiza_dados_resultado) 
-    | "Mostrar resultados da união dos pcollection" >> beam.Map(print)
+    | "Organiza os dados" >> beam.Map(organiza_dados) 
+    | "Preparar csv" >> beam.Map(preparar_csv)
+    #| "Mostrar resultados da união dos pcollection" >> beam.Map(print)
 )
+
+header = 'Regiao;Estado;UF;Governador;TotalCasos;TotalObitos'
+
+resultado | "Criar arquivo CSV" >> WriteToText('arquivo1', file_name_suffix='.csv', shard_name_template='',header=header)
 
 pipeline.run()
 

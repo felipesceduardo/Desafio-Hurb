@@ -89,22 +89,31 @@ def lista_para_tupla(elemento):
     }
     return (coduf, dicionario)
 
-def organizando_dados_resultado(elemento):
+def remove_regiao(elemento):
     """
-    Receber tupla 
-    Organizar e retornar as colunas conforme solicitado no projeto
+    Recebe tupla 
+    Remove a região denominada Brasil pelo código UF
     """
     coduf, lista_dicionarios = elemento
-    if(coduf != '76'):       
-        dic1 = lista_dicionarios[0]
-        dic2 = lista_dicionarios[1]
-        regiao = dic2['regiao']
-        estado = dic1['nome_estado']
-        uf = dic2['UF']
-        governador = dic1['governador']
-        totalCasos = dic2['totalCasos']
-        totalObitos = dic2['totalObitos']
-        return (regiao, estado, uf, governador, totalCasos, totalObitos)
+    if(coduf == '76'):
+        return False  
+    return True
+
+def organiza_dados_resultado(elemento):
+    """
+    Recebe uma tupla 
+    Retorna uma tupla com colunas organizadas conforme solicitado no projeto
+    """
+    coduf, lista_dicionarios = elemento
+    dic1 = lista_dicionarios[0]
+    dic2 = lista_dicionarios[1]
+    regiao = dic2['regiao']
+    estado = dic1['nome_estado']
+    uf = dic2['UF']
+    governador = dic1['governador']
+    totalCasos = dic2['totalCasos']
+    totalObitos = dic2['totalObitos']
+    return (regiao, estado, uf, governador, totalCasos, totalObitos)
     
 
 #pcollection gerado a partir do pipeline que trata os dados do arquivo HIST_PAINEL_COVIDBR_28set2020.csv
@@ -134,7 +143,8 @@ resultado = (
     (covid, estados)
     | "Empilha as pcollection" >> beam.Flatten()
     | "Agrupa as pcollection" >> beam.GroupByKey()
-    | "Tratando e organizando dados para saída final" >> beam.Map(organizando_dados_resultado) 
+    | "Remove região denominada Brasil" >> beam.Filter(remove_regiao) 
+    | "Organiza os dados" >> beam.Map(organiza_dados_resultado) 
     | "Mostrar resultados da união dos pcollection" >> beam.Map(print)
 )
 

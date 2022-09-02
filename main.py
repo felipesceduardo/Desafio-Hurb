@@ -34,7 +34,7 @@ def lista_para_dicionario(elemento, colunas):
     Retorna um dicionário 
     """
     d = dict(zip(colunas, elemento))
-    d.pop('municipio'), d.pop('codmun'), d.pop('codRegiaoSaude'), d.pop('nomeRegiaoSaude'), d.pop('data'), d.pop('semanaEpi'), d.pop('populacaoTCU2019'), d.pop('casosNovos'), d.pop('obitosNovos'), d.pop('Recuperadosnovos'), d.pop('emAcompanhamentoNovos'), d.pop('interior/metropolitana')
+    d.pop('municipio'), d.pop('codmun'), d.pop('codRegiaoSaude'), d.pop('nomeRegiaoSaude'), d.pop('data'), d.pop('semanaEpi'), d.pop('populacaoTCU2019'), d.pop('casosAcumulado'), d.pop('obitosAcumulado'), d.pop('Recuperadosnovos'), d.pop('emAcompanhamentoNovos'), d.pop('interior/metropolitana')
     return d 
     
 def texto_para_lista(elemento, delimitador=';'):
@@ -52,9 +52,13 @@ def chave_coduf(elemento):
     regiao = elemento['regiao']
     estado = elemento['estado']
     coduf = elemento['coduf']
-    casosAcumulado = elemento['casosAcumulado']
-    obitosAcumulado = elemento['obitosAcumulado']
-    return (regiao, estado, coduf, casosAcumulado, obitosAcumulado)
+    casosNovos = int(elemento['casosNovos'])
+    if(casosNovos < 0):
+        casosNovos *= -1
+    obitosNovos = int(elemento['obitosNovos'])
+    if(obitosNovos < 0):
+        obitosNovos *= -1
+    return (regiao, estado, coduf, casosNovos, obitosNovos)
 
 '''def casos_covid(elemento):
     """

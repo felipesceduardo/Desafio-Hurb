@@ -68,8 +68,15 @@ def casos_covid(elemento):
         totalCasos += int(registro['casosNovos'])
         totalObitos += int(registro['obitosNovos'])
     return (regiao, estado, coduf, totalCasos, totalObitos)
-    
 
+def lista_para_tupla(elemento):
+    """
+    Receber lista 
+    Retornar tupla com colunas filtradas
+    """
+    return (elemento[0], elemento[1], elemento[3])
+
+#pcollection gerado a partir do pipeline que trata os dados do arquivo HIST_PAINEL_COVIDBR_28set2020.csv
 covid = (
     pipeline
     | "Leitura do dataset de casos de covid" >> 
@@ -79,8 +86,17 @@ covid = (
     | "Criar chave pelo código da UF" >> beam.Map(chave_coduf)
     | "Agrupar pelo estado" >> beam.GroupByKey()
     | "Descompactar casos de covid" >> beam.Map(casos_covid)
-    | "Mostrar resultados" >> beam.Map(print)
-    
+    | "Mostrar resultados" >> beam.Map(print)   
+)
+
+#pcollection gerado a partir do pipeline que trata os dados do arquivo EstadosIBGE.csv
+estados = (
+    pipeline
+    | "Leitura do dataset de informações dos estados" >> 
+        ReadFromText('EstadosIBGE.csv', skip_header_lines=1)
+    | "Transforma texto para lista" >> beam.Map(texto_para_lista)
+    | "Lista para tupla" >> beam.Map(lista_para_tupla)
+    | "Exibe resultados" >> beam.Map(print)   
 )
 
 pipeline.run()

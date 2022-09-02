@@ -49,26 +49,26 @@ def chave_coduf(elemento):
     Receber um dicionário 
     Retornar uma tupla contendo todos os valores para cada chave
     """  
-    regiao = elemento['regiao']
-    estado = elemento['estado']
     coduf = elemento['coduf']
-    casosNovos = int(elemento['casosNovos'])
-    if(casosNovos < 0):
-        casosNovos *= -1
-    obitosNovos = int(elemento['obitosNovos'])
-    if(obitosNovos < 0):
-        obitosNovos *= -1
-    return (regiao, estado, coduf, casosNovos, obitosNovos)
+    return (coduf, elemento)
 
-'''def casos_covid(elemento):
+def casos_covid(elemento):
     """
-    Recebe uma tupla ('RS', [{}, {}])
-    Retornar uma tupla ('RS-2014-12', 8.0)
+    Recebe uma tupla (coduf, [{}, {}, {}...])
+    Retornar uma tupla contendo regiao, estado, coduf, totalCasos, totalObitos
     """
     coduf, registros = elemento
+    totalCasos = 0
+    totalObitos = 0
+    primeiro_registro = registros[0]
+    regiao = primeiro_registro['regiao']
+    estado = primeiro_registro['estado']  
+
     for registro in registros:
-        yield (f"{coduf}", registro['casos'])
-'''
+        totalCasos += int(registro['casosNovos'])
+        totalObitos += int(registro['obitosNovos'])
+    return (regiao, estado, coduf, totalCasos, totalObitos)
+    
 
 covid = (
     pipeline
@@ -76,11 +76,9 @@ covid = (
         ReadFromText('HIST_PAINEL_COVIDBR_28set2020.csv', skip_header_lines=1)
     | "De texto para lista" >> beam.Map(texto_para_lista)
     | "De lista para dicionário" >> beam.Map(lista_para_dicionario, colunas_covid)
-    #| "Criar campo ano_mes" >>beam.Map(trata_data) 
     | "Criar chave pelo código da UF" >> beam.Map(chave_coduf)
-    #| "Agrupar pelo estado" >> beam.GroupByKey()
-    #| "Descompactar casos de covid" >> beam.FlatMap(casos_covid)
-    #| "Soma dos casos de infecão e óbito pela chave" >> beam.CombinePerKey(sum)
+    | "Agrupar pelo estado" >> beam.GroupByKey()
+    | "Descompactar casos de covid" >> beam.Map(casos_covid)
     | "Mostrar resultados" >> beam.Map(print)
     
 )

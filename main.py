@@ -1,3 +1,14 @@
+"""Pipeline de dados utilzando Apache Beam
+
+Este script permite ao usuário obter um arquivo csv e um json a partir
+de dois arquivos de dados csv.
+Cada um desses dois arquivos csv é passado por um pipeline de dados 
+onde os mesmos são tratados individualmente. Ao final os dois são agrupados 
+e passam por um novo pipepline, sendo tratados para gerar os arquivos finais
+de acordo com a formatação solicitada.
+
+Este script requer instalação do framework Apache Beam
+"""
 import csv 
 import json 
 import apache_beam as beam
@@ -30,33 +41,63 @@ colunas_covid = [
                 ]
 
 def lista_para_dicionario(elemento, colunas):
+    """Recebe duas listas e retorna um dicionário 
+
+    Parametros
+    ----------
+    elemento : list
+        Lista contendo os elementos de cada coluna do arquivo csv
+    colunas : list
+        Lista que contém o header do arquivo csv 
+
+    Retorna
+    -------
+    dict 
+        Dicionário onde cada key é o header da coluna e cada value é o valor associado a tal coluna
     """
-    Recebe duas listas
-    Retorna um dicionário 
-    """
+
     d = dict(zip(colunas, elemento))
     d.pop('municipio'), d.pop('codmun'), d.pop('codRegiaoSaude'), d.pop('nomeRegiaoSaude'), d.pop('data'), d.pop('semanaEpi'), d.pop('populacaoTCU2019'), d.pop('casosAcumulado'), d.pop('obitosAcumulado'), d.pop('Recuperadosnovos'), d.pop('emAcompanhamentoNovos'), d.pop('interior/metropolitana')
     return d 
 
 def texto_para_lista(elemento, delimitador=';'):
+    """Recebe uma string e um delimitador retorna uma lista 
+
+    Parametros
+    ----------
+    elemento : str
+        String contendo linha do arquivo csv
+    delimitador : str, opcional
+        Delimitador usado para fazer o split na string
+
+    Retorna
+    -------
+    Lista
+        Lista contendo os elementos de cada coluna do arquivo csv
     """
-    Recebe um texto e um delimitador e retorna uma lista de elementos
-    pelo delimitador 
-    """
+
     return elemento.split(delimitador)
 
 def chave_coduf(elemento): 
+    """Recebe um dicionário e retorna uma tupla contendo o códido da UF e o dicionário
+
+    Parametros
+    ----------
+    elemento : dict
+        Dicionário onde cada key é o header da coluna e cada value é o valor associado a tal coluna
+
+    Retorna
+    -------
+    Tupla
+        Tupla contendo o código da UF e o dicionário
     """
-    Receber um dicionário 
-    Retornar uma tupla contendo coduf e um dicionário
-    """  
     coduf = elemento['coduf']
     return (coduf, elemento)
 
 def casos_covid(elemento):
     """
     Recebe uma tupla (coduf, [{}, {}, {}...])
-    Retornar uma tupla contendo o coduf e um dicionário contendo regiao, estado, coduf, totalCasos, totalObitos
+    Retorna uma tupla contendo o coduf e um dicionário contendo regiao, estado, coduf, totalCasos, totalObitos
     """
     coduf, registros = elemento
     totalCasos = 0
@@ -78,8 +119,8 @@ def casos_covid(elemento):
 
 def lista_para_tupla(elemento):
     """
-    Receber lista 
-    Retornar tupla com coduf e um dicionário contendo nome do estado e do governador
+    Recebe lista 
+    Retorna tupla com coduf e um dicionário contendo nome do estado e do governador
     """
     nome_estado = elemento[0]
     coduf = elemento[1]
@@ -116,7 +157,7 @@ def organiza_dados(elemento):
     totalObitos = dic2['totalObitos']
     return (regiao, estado, uf, governador, str(totalCasos), str(totalObitos))
 
-def preparar_csv(elemento, delimitador=";"):
+def prepara_csv(elemento, delimitador=";"):
     """
     Receber uma tupla do tipo 
     Retornar uma string delimitada por ';'
@@ -172,7 +213,7 @@ resultado = (
     | "Agrupa as pcollection" >> beam.GroupByKey()
     | "Remove região denominada Brasil" >> beam.Filter(remove_regiao) 
     | "Organiza os dados" >> beam.Map(organiza_dados) 
-    | "Preparar csv" >> beam.Map(preparar_csv)
+    | "Preparar csv" >> beam.Map(prepara_csv)
     #| "Mostrar resultados da união dos pcollection" >> beam.Map(print)
 )
 
@@ -183,6 +224,6 @@ resultado | "Criar arquivo CSV" >> WriteToText('arquivo1', file_name_suffix='.cs
 pipeline.run()
 
 csvArquivo = r'arquivo1.csv'
-jsonArquivo = r'arquivo1.json'
+jsonArquivo = r'arquivo2.json'
 csv_para_json(csvArquivo, jsonArquivo)
 

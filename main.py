@@ -1,11 +1,11 @@
+import csv 
+import json 
 import apache_beam as beam
 from apache_beam.io import ReadFromText
 from apache_beam.io.textio import WriteToText
-#importando opções de pipeline para o projeto 
 from apache_beam.options.pipeline_options import PipelineOptions 
-#criação de instância de objeto de opção de pipeline 
 pipeline_options = PipelineOptions(argv=None)
-#criação de instância do pipeline recebendo como parâmetro as opções de pipeline
+
 pipeline = beam.Pipeline(options=pipeline_options)
 
 
@@ -37,7 +37,7 @@ def lista_para_dicionario(elemento, colunas):
     d = dict(zip(colunas, elemento))
     d.pop('municipio'), d.pop('codmun'), d.pop('codRegiaoSaude'), d.pop('nomeRegiaoSaude'), d.pop('data'), d.pop('semanaEpi'), d.pop('populacaoTCU2019'), d.pop('casosAcumulado'), d.pop('obitosAcumulado'), d.pop('Recuperadosnovos'), d.pop('emAcompanhamentoNovos'), d.pop('interior/metropolitana')
     return d 
-    
+
 def texto_para_lista(elemento, delimitador=';'):
     """
     Recebe um texto e um delimitador e retorna uma lista de elementos
@@ -123,6 +123,24 @@ def preparar_csv(elemento, delimitador=";"):
     """
     return f"{delimitador}".join(elemento)    
 
+
+def csv_para_json(csvArquivo, jsonArquivo):
+    """
+    Recebe dois arquivos, um csv e outro json
+    Lê o arquivo csv e carrega seus dados usando o leitor de dicionário da biblioteca csv
+    Converte cada linha do csv em um dicionário
+    Adiciona o dicionário em um array 
+    Converte o array em uma string JSON e escreve no arquivo
+    """
+    json_array = [] 
+    with open(csvArquivo, encoding='utf-8') as csvf: 
+        reader = csv.DictReader(csvf, delimiter=';')  
+        for row in reader: 
+            json_array.append(row)
+
+    with open(jsonArquivo, 'w', encoding='utf-8') as jsonf: 
+        jsonString = json.dumps(json_array, indent=4)
+        jsonf.write(jsonString)
     
 
 #pcollection gerado a partir do pipeline que trata os dados do arquivo HIST_PAINEL_COVIDBR_28set2020.csv
@@ -163,4 +181,8 @@ header = 'Regiao;Estado;UF;Governador;TotalCasos;TotalObitos'
 resultado | "Criar arquivo CSV" >> WriteToText('arquivo1', file_name_suffix='.csv', shard_name_template='',header=header)
 
 pipeline.run()
+
+csvArquivo = r'arquivo1.csv'
+jsonArquivo = r'arquivo1.json'
+csv_para_json(csvArquivo, jsonArquivo)
 

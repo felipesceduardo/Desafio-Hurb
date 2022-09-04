@@ -61,7 +61,7 @@ def lista_para_dicionario(elemento, colunas):
     return d 
 
 def texto_para_lista(elemento, delimitador=';'):
-    """Recebe uma string e um delimitador retorna uma lista 
+    """Recebe uma string e um delimitador e retorna uma lista 
 
     Parametros
     ----------
@@ -272,7 +272,7 @@ resultado | "Criar arquivo CSV" >> WriteToText('arquivo1', file_name_suffix='.cs
 
 pipeline.run()
 
-csvArquivo = r'arquivo1.csv'
-jsonArquivo = r'arquivo2.json'
-csv_para_json(csvArquivo, jsonArquivo)
+csv_arquivo = r'arquivo1.csv'
+json_arquivo = r'arquivo2.json'
+csv_para_json(csv_arquivo, json_arquivo)
 
